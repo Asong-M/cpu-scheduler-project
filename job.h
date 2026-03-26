@@ -2,6 +2,7 @@
 #define JOB_H
 
 typedef enum {
+    NEW,
     READY,
     RUNNING,
     WAITING,
@@ -24,8 +25,8 @@ typedef struct Job {
 
     int finish_time;
 
-    int queue_level;      // for MLFQ later
-    int time_slice_used;  // for RR / MLFQ later
+    int queue_level;
+    int time_slice_used;
 
     struct Job* next;
 } Job;
