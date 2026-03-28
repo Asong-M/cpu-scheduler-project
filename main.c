@@ -155,6 +155,12 @@ static void print_summary(Job jobs[], int total_jobs, int total_elapsed_time) {
     printf("Average job completion time: %.2f\n", (double)sum_completion / total_jobs);
     printf("Average time in ready queue: %.2f\n", (double)sum_ready / total_jobs);
     printf("Average time sleeping on I/O state: %.2f\n", (double)sum_io / total_jobs);
+    printf("Throughput (total elapsed time per job): %.2f\n", (double)total_elapsed_time / total_jobs);
+
+    printf("\nRunning time per job:\n");
+    for (i = 0; i < total_jobs; i++) {
+        printf("PID=%d running_time=%d\n", jobs[i].pid, jobs[i].running_time);
+    }
 }
 
 int main(int argc, char* argv[]) {
