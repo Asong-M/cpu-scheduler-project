@@ -126,17 +126,8 @@ static void print_summary(Job jobs[], int total_jobs, int total_elapsed_time) {
     int sum_ready = 0;
     int sum_io = 0;
 
-    printf("\nFinal Job Stats:\n");
     for (i = 0; i < total_jobs; i++) {
         int completion_time = jobs[i].finish_time - jobs[i].arrival_time;
-        printf("PID=%d finish=%d turnaround=%d ready=%d io=%d running=%d\n",
-               jobs[i].pid,
-               jobs[i].finish_time,
-               completion_time,
-               jobs[i].ready_time,
-               jobs[i].io_time,
-               jobs[i].running_time);
-
         if (shortest == -1 || completion_time < shortest) shortest = completion_time;
         if (longest == -1 || completion_time > longest) longest = completion_time;
         sum_completion += completion_time;
@@ -144,14 +135,26 @@ static void print_summary(Job jobs[], int total_jobs, int total_elapsed_time) {
         sum_io += jobs[i].io_time;
     }
 
-    printf("\nOverall Summary:\n");
-    printf("Total jobs: %d\n", total_jobs);
-    printf("Total elapsed time: %d\n", total_elapsed_time);
-    printf("Shortest completion time: %d\n", shortest);
-    printf("Longest completion time: %d\n", longest);
-    printf("Average completion time: %.2f\n", (double)sum_completion / total_jobs);
-    printf("Average ready time: %.2f\n", (double)sum_ready / total_jobs);
-    printf("Average I/O time: %.2f\n", (double)sum_io / total_jobs);
+    printf("\n");
+    printf("         | Total time      | Total time       | Total time   |\n");
+    printf("  Job#   | in ready to run | in sleeping on   | in system    |\n");
+    printf("         | state           | I/O state        |              |\n");
+    printf("=========+==================+==================+==============+\n");
+    for (i = 0; i < total_jobs; i++) {
+        printf("%-9d| %-16d| %-17d| %-13d|\n",
+               jobs[i].pid,
+               jobs[i].ready_time,
+               jobs[i].io_time,
+               jobs[i].total_time);
+    }
+    printf("=========+==================+==================+==============+\n");
+    printf("Total simulation run time: %d\n", total_elapsed_time);
+    printf("Total number of jobs: %d\n", total_jobs);
+    printf("Shortest job completion time: %d\n", shortest);
+    printf("Longest job completion time: %d\n", longest);
+    printf("Average job completion time: %.2f\n", (double)sum_completion / total_jobs);
+    printf("Average time in ready queue: %.2f\n", (double)sum_ready / total_jobs);
+    printf("Average time sleeping on I/O state: %.2f\n", (double)sum_io / total_jobs);
 }
 
 int main(int argc, char* argv[]) {
