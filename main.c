@@ -27,6 +27,12 @@ static int parse_policy(const char* policy) {
     return 0;
 }
 
+static int compare_pid(const void* a, const void* b) {
+    Job* ja = *(Job**)a;
+    Job* jb = *(Job**)b;
+    return ja->pid - jb->pid;
+}
+
 static void insert_ready_job(int policy, Queue* ready_queue, Queue mlfq[], Job* job) {
     job->state = READY;
     job->next = NULL;
@@ -71,16 +77,23 @@ static Job* select_next_job(int policy, Queue* ready_queue, Queue mlfq[]) {
 
 static void boost_all_jobs(Queue mlfq[], Job* current_job) {
     int level;
-    int count;
-    Job* job;
+    Job* boosted[MAX_JOBS];
+    int boosted_count = 0;
+    int j;
 
     for (level = 1; level < MLFQ_LEVELS; level++) {
-        count = mlfq[level].size;
+        int count = mlfq[level].size;
         while (count-- > 0) {
-            job = dequeue(&mlfq[level]);
+            Job* job = dequeue(&mlfq[level]);
             job->queue_level = 0;
-            enqueue(&mlfq[0], job);
+            boosted[boosted_count++] = job;
         }
+    }
+
+    qsort(boosted, boosted_count, sizeof(Job*), compare_pid);
+
+    for (j = 0; j < boosted_count; j++) {
+        enqueue(&mlfq[0], boosted[j]);
     }
 
     if (current_job != NULL && current_job->state == RUNNING) {
@@ -242,8 +255,7 @@ int main(int argc, char* argv[]) {
         {
             Job* completing[MAX_JOBS];
             int completing_count = 0;
-            int j, k;
-            Job* tmp;
+            int j;
 
             for (i = 0; i < io_count; i++) {
                 Job* job = dequeue(&io_queue);
@@ -257,15 +269,7 @@ int main(int argc, char* argv[]) {
                 }
             }
 
-            for (j = 1; j < completing_count; j++) {
-                tmp = completing[j];
-                k = j - 1;
-                while (k >= 0 && completing[k]->pid > tmp->pid) {
-                    completing[k + 1] = completing[k];
-                    k--;
-                }
-                completing[k + 1] = tmp;
-            }
+            qsort(completing, completing_count, sizeof(Job*), compare_pid);
 
             for (j = 0; j < completing_count; j++) {
                 insert_ready_job(policy, &ready_queue, mlfq, completing[j]);

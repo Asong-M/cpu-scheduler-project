@@ -1,2 +1,7 @@
 scheduler
 *.o
+out.txt
+out_fixed.txt
+*.exe
+submission/
+out_mlfq.txt
