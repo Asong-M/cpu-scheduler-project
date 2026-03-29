@@ -239,16 +239,37 @@ int main(int argc, char* argv[]) {
         }
 
         io_count = io_queue.size;
-        for (i = 0; i < io_count; i++) {
-            Job* job = dequeue(&io_queue);
-            if (io_complete()) {
-                if (policy == POLICY_MLFQ && job->queue_level < 0) {
-                    job->queue_level = 0;
+        {
+            Job* completing[MAX_JOBS];
+            int completing_count = 0;
+            int j, k;
+            Job* tmp;
+
+            for (i = 0; i < io_count; i++) {
+                Job* job = dequeue(&io_queue);
+                if (io_complete()) {
+                    if (policy == POLICY_MLFQ && job->queue_level < 0) {
+                        job->queue_level = 0;
+                    }
+                    completing[completing_count++] = job;
+                } else {
+                    enqueue(&io_queue, job);
                 }
-                insert_ready_job(policy, &ready_queue, mlfq, job);
-                printf("Job %d completed I/O and returned to READY queue\n", job->pid);
-            } else {
-                enqueue(&io_queue, job);
+            }
+
+            for (j = 1; j < completing_count; j++) {
+                tmp = completing[j];
+                k = j - 1;
+                while (k >= 0 && completing[k]->pid > tmp->pid) {
+                    completing[k + 1] = completing[k];
+                    k--;
+                }
+                completing[k + 1] = tmp;
+            }
+
+            for (j = 0; j < completing_count; j++) {
+                insert_ready_job(policy, &ready_queue, mlfq, completing[j]);
+                printf("Job %d completed I/O and returned to READY queue\n", completing[j]->pid);
             }
         }
 

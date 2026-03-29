@@ -61,4 +61,10 @@ Longest job completion time: 34
 Average job completion time: 19.33
 Average time in ready queue: 5.00
 Average time sleeping on I/O state: 2.67
+Throughput (total elapsed time per job): 11.67
+
+Running time per job:
+PID=123 running_time=10
+PID=124 running_time=20
+PID=125 running_time=5
 ```
